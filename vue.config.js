@@ -1,7 +1,9 @@
 module.exports = {
 
-  publicPath: "/generate", //publicPath取代了baseUrl
+  publicPath: ".", //publicPath取代了baseUrl
+  assetsDir: "generate",
   outputDir: "dist",
+  indexPath: "generate.html",
   lintOnSave: true,
   runtimeCompiler: true, //关键点在这  原来的 Compiler 换成了 runtimeCompiler
   // 调整内部的 webpack 配置。
