@@ -38,6 +38,13 @@
           {{ scope.row.baseDir }}
         </template>
       </el-table-column>
+      <el-table-column label="备注">
+        <template slot-scope="scope">
+          <el-tooltip class="item" effect="dark" :content="scope.row.remark" placement="top">
+            <span>{{ scope.row.remark | ellipsis }}</span>
+          </el-tooltip>
+        </template>
+      </el-table-column>
       <el-table-column
         align="center"
         prop="created_at"
@@ -97,6 +104,13 @@
         <el-form-item label="根目录" prop="baseDir">
           <el-input
             v-model="saveOrUpdateForm.baseDir"
+            type="text"
+            autocomplete="off"
+          />
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+            v-model="saveOrUpdateForm.remark"
             type="text"
             autocomplete="off"
           />
@@ -176,6 +190,15 @@ export default {
     Pagination,
     EditableCell
   },
+  filters: {
+    ellipsis(value) {
+      if (!value) return ''
+      if (value.length > 40) {
+        return value.slice(0, 40) + '...'
+      }
+      return value
+    }
+  },
   data() {
     return {
       // 分页
@@ -198,7 +221,7 @@ export default {
       saveOrUpdateFormRules: {
         name: [
           { required: true, message: '请输入模板名', trigger: 'blur' },
-          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }
+          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
         ],
         baseDir: [
           { pattern: /^([a-zA-Z_]+[a-zA-Z0-9_]*[a-zA-Z_]*)*(\/?[a-zA-Z_]+[a-zA-Z0-9_]*[a-zA-Z_]*)+$/, message: '根目录格式不正确', trigger: 'blur' }
@@ -272,7 +295,7 @@ export default {
     handleEdit(row) {
       this.saveOrUpdateFormTitile = '编辑'
       this.updateId = row.id
-      this.saveOrUpdateForm = row
+      this.saveOrUpdateForm = Object.assign({}, row)
       this.saveOrUpdateFormVisible = true
     },
     handleCreate() {
@@ -284,7 +307,7 @@ export default {
     updateTemplate() {
       this.saveOrUpdateLoading = true
       update(this.saveOrUpdateForm, this.updateId).then(() => {
-        this.resetForm(this.saveOrUpdateFormRef)
+        this.saveOrUpdateForm = {}
         this.saveOrUpdateFormVisible = false
         this.fetchData()
         showSuccessDialog(this)
@@ -296,7 +319,7 @@ export default {
     saveTemplate() {
       this.saveOrUpdateLoading = true
       save(this.saveOrUpdateForm).then(() => {
-        this.resetForm(this.saveOrUpdateFormRef)
+        this.saveOrUpdateForm = {}
         this.saveOrUpdateFormVisible = false
         this.fetchData()
         showSuccessDialog(this)
@@ -320,10 +343,6 @@ export default {
           showSuccessDialog(this)
         })
       })
-    },
-    // 通用
-    resetForm(formName) {
-      this.$refs[formName].resetFields()
     }
   }
 }
