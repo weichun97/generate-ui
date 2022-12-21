@@ -1,173 +1,173 @@
 <template>
   <div class="app-container">
-    <el-tabs v-model="activeName" type="card">
-      <el-tab-pane name="first">
-        <span slot="label"><i class="el-icon-edit-outline" /> 生成代码</span>
-        <div class="generate">
-          <!-- 生成代码表单 -->
-          <el-form
-            :ref="generateFormRef"
-            :model="generateForm"
-            :rules="generateFormRules"
-            size="mini"
-            label-width="150px"
-          >
+    <!-- <el-tabs v-model="activeName" type="card"> -->
+    <!-- <el-tab-pane name="first"> -->
+    <!-- <span slot="label"><i class="el-icon-edit-outline" /> 生成代码</span> -->
+    <div class="generate">
+      <!-- 生成代码表单 -->
+      <el-form
+        :ref="generateFormRef"
+        :model="generateForm"
+        :rules="generateFormRules"
+        size="mini"
+        label-width="150px"
+      >
 
-            <el-form-item label="选择数据源" prop="datasourceId">
+        <el-form-item label="选择数据源" prop="datasourceId">
+          <el-select
+            v-model="generateForm.datasourceId"
+            placeholder="选择数据源"
+          >
+            <el-option
+              v-for="item in datasourceConfigList"
+              :key="item.id"
+              :label="getDatasourceLabel(item)"
+              :value="item.id"
+            >
+              <span style="float: left">{{ getDatasourceLabel(item) }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px">
+                <el-tooltip placement="top" content="Duplicate">
+                  <el-link type="primary" icon="el-icon-document-copy" style="margin-right: 20px;" @click.stop="handleCopy(item)" />
+                </el-tooltip>
+                <el-link type="primary" icon="el-icon-edit" style="margin-right: 20px;" @click.stop="handleEdit(item)" />
+                <el-link type="danger" icon="el-icon-delete" @click.stop="handleDelete(item)" />
+              </span>
+            </el-option>
+
+          </el-select>
+          <el-button type="text" @click="handleCreate">新建数据源</el-button>
+        </el-form-item>
+        <!-- 数据表 -->
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <h4>选择表</h4>
+            <el-input
+              v-model="tableSearch"
+              prefix-icon="el-icon-search"
+              clearable
+              size="mini"
+              placeholder="过滤表"
+              style="margin-bottom: 10px;width: 100%;"
+            />
+            <el-table
+              :data="tableListData"
+              :row-class-name="tableRowClassName"
+              @selection-change="onTableListSelect"
+            >
+              <el-table-column
+                type="selection"
+              />
+              <el-table-column
+                prop="name"
+                label="表名"
+              />
+              <el-table-column
+                prop="comment"
+                label="备注"
+              />
+            </el-table>
+          </el-col>
+          <!-- 模板 -->
+          <el-col id="templateSelect" :span="12">
+            <h4>选择模板</h4>
+            <el-select
+              v-model="templateId"
+              placeholder="选择模板所在组"
+              size="mini"
+              style="margin-bottom: 10px; width: 100%;"
+              @change="onTemplateGroupChange"
+            >
+              <el-option
+                v-for="item in templateGroups"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              >
+                {{ item.name }}
+              </el-option>
+            </el-select>
+            <el-table
+              ref="templateListSelect"
+              :data="templateListData"
+              @selection-change="onTemplateListSelect"
+            >
+              <el-table-column
+                type="selection"
+              />
+              <el-table-column
+                prop="name"
+                label="模板名称"
+              >
+                <span slot-scope="scope">
+                  <!--              {{scope.row.groupName}}-{{scope.row.name}}-->
+                  {{ scope.row.name }}
+                </span>
+              </el-table-column>
+            </el-table>
+            <el-button type="primary" @click="onGenerate">生成代码</el-button>
+          </el-col>
+        </el-row>
+
+        <!-- 新增编辑 -->
+        <el-dialog
+          :title="saveOrUpdateFormTitle"
+          :visible.sync="saveOrUpdateFormVisible"
+          :close-on-press-escape="false"
+          :close-on-click-modal="false"
+        >
+          <el-form
+            :ref="saveOrUpdateFormRef"
+            :model="saveOrUpdateForm"
+            :rules="saveOrUpdateFormRules"
+            size="mini"
+            label-width="120px"
+          >
+            <el-form-item label="数据库类型" prop="dbType">
               <el-select
-                v-model="generateForm.datasourceId"
-                placeholder="选择数据源"
+                v-model="saveOrUpdateForm.dbType"
+                filterable
+                default-first-option
               >
                 <el-option
-                  v-for="item in datasourceConfigList"
-                  :key="item.id"
-                  :label="getDatasourceLabel(item)"
-                  :value="item.id"
-                >
-                  <span style="float: left">{{ getDatasourceLabel(item) }}</span>
-                  <span style="float: right; color: #8492a6; font-size: 13px">
-                    <el-tooltip placement="top" content="Duplicate">
-                      <el-link type="primary" icon="el-icon-document-copy" style="margin-right: 20px;" @click.stop="handleCopy(item)" />
-                    </el-tooltip>
-                    <el-link type="primary" icon="el-icon-edit" style="margin-right: 20px;" @click.stop="handleEdit(item)" />
-                    <el-link type="danger" icon="el-icon-delete" @click.stop="handleDelete(item)" />
-                  </span>
-                </el-option>
-
-              </el-select>
-              <el-button type="text" @click="handleCreate">新建数据源</el-button>
-            </el-form-item>
-            <!-- 数据表 -->
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <h4>选择表</h4>
-                <el-input
-                  v-model="tableSearch"
-                  prefix-icon="el-icon-search"
-                  clearable
-                  size="mini"
-                  placeholder="过滤表"
-                  style="margin-bottom: 10px;width: 100%;"
+                  v-for="item in dbTypes"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
                 />
-                <el-table
-                  :data="tableListData"
-                  :row-class-name="tableRowClassName"
-                  @selection-change="onTableListSelect"
-                >
-                  <el-table-column
-                    type="selection"
-                  />
-                  <el-table-column
-                    prop="name"
-                    label="表名"
-                  />
-                  <el-table-column
-                    prop="comment"
-                    label="备注"
-                  />
-                </el-table>
-              </el-col>
-              <!-- 模板 -->
-              <el-col id="templateSelect" :span="12">
-                <h4>选择模板</h4>
-                <el-select
-                  v-model="templateId"
-                  placeholder="选择模板所在组"
-                  size="mini"
-                  style="margin-bottom: 10px; width: 100%;"
-                  @change="onTemplateGroupChange"
-                >
-                  <el-option
-                    v-for="item in templateGroups"
-                    :key="item.id"
-                    :label="item.name"
-                    :value="item.id"
-                  >
-                    {{ item.name }}
-                  </el-option>
-                </el-select>
-                <el-table
-                  ref="templateListSelect"
-                  :data="templateListData"
-                  @selection-change="onTemplateListSelect"
-                >
-                  <el-table-column
-                    type="selection"
-                  />
-                  <el-table-column
-                    prop="name"
-                    label="模板名称"
-                  >
-                    <span slot-scope="scope">
-                      <!--              {{scope.row.groupName}}-{{scope.row.name}}-->
-                      {{ scope.row.name }}
-                    </span>
-                  </el-table-column>
-                </el-table>
-                <el-button type="primary" @click="onGenerate">生成代码</el-button>
-              </el-col>
-            </el-row>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="Host" prop="host">
+              <el-input v-model="saveOrUpdateForm.host" placeholder="地址" show-word-limit maxlength="100" />
+            </el-form-item>
+            <el-form-item label="Port" prop="port">
+              <el-input v-model="saveOrUpdateForm.port" placeholder="端口" show-word-limit maxlength="10" />
+            </el-form-item>
+            <el-form-item label="dbName" prop="dbName">
+              <el-input v-model="saveOrUpdateForm.dbName" placeholder="数据库名" show-word-limit maxlength="64" />
+            </el-form-item>
+            <el-form-item label="Username" prop="username">
+              <el-input v-model="saveOrUpdateForm.username" placeholder="用户名" show-word-limit maxlength="100" />
+            </el-form-item>
+            <el-form-item label="Password" prop="password">
+              <el-input v-model="saveOrUpdateForm.password" type="password" placeholder="密码" show-word-limit maxlength="100" />
+            </el-form-item>
+            <el-form-item label="删除前缀" prop="delPrefix">
+              <el-input v-model="saveOrUpdateForm.delPrefix" placeholder="删除前缀（表名sys_user删除前缀sys_对应bean为User）多前缀逗号隔开" show-word-limit maxlength="200" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="success" :loading="testConnectLoading" @click="testConnect">测试连接</el-button>
+              <el-button type="primary" :loading="saveOrUpdateLoading" @click="saveOrUpdate">保存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-dialog>
 
-            <!-- 新增编辑 -->
-            <el-dialog
-              :title="saveOrUpdateFormTitle"
-              :visible.sync="saveOrUpdateFormVisible"
-              :close-on-press-escape="false"
-              :close-on-click-modal="false"
-            >
-              <el-form
-                :ref="saveOrUpdateFormRef"
-                :model="saveOrUpdateForm"
-                :rules="saveOrUpdateFormRules"
-                size="mini"
-                label-width="120px"
-              >
-                <el-form-item label="数据库类型">
-                  <el-select
-                    v-model="saveOrUpdateForm.dbType"
-                    filterable
-                    default-first-option
-                  >
-                    <el-option
-                      v-for="item in dbTypes"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value"
-                    />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="Host" prop="host">
-                  <el-input v-model="saveOrUpdateForm.host" placeholder="地址" show-word-limit maxlength="100" />
-                </el-form-item>
-                <el-form-item label="Port" prop="port">
-                  <el-input v-model="saveOrUpdateForm.port" placeholder="端口" show-word-limit maxlength="10" />
-                </el-form-item>
-                <el-form-item label="dbName" prop="dbName">
-                  <el-input v-model="saveOrUpdateForm.dbName" placeholder="数据库名" show-word-limit maxlength="64" />
-                </el-form-item>
-                <el-form-item label="Username" prop="username">
-                  <el-input v-model="saveOrUpdateForm.username" placeholder="用户名" show-word-limit maxlength="100" />
-                </el-form-item>
-                <el-form-item label="Password" prop="password">
-                  <el-input v-model="saveOrUpdateForm.password" type="password" placeholder="密码" show-word-limit maxlength="100" />
-                </el-form-item>
-                <el-form-item label="删除前缀" prop="delPrefix">
-                  <el-input v-model="saveOrUpdateForm.delPrefix" placeholder="删除前缀（表名sys_user删除前缀sys_对应bean为User）多前缀逗号隔开" show-word-limit maxlength="200" />
-                </el-form-item>
-                <el-form-item>
-                  <el-button type="success" :loading="testConnectLoading" @click="testConnect">测试连接</el-button>
-                  <el-button type="primary" :loading="saveOrUpdateLoading" @click="saveOrUpdate">保存</el-button>
-                </el-form-item>
-              </el-form>
-            </el-dialog>
-
-          </el-form></div>
-      </el-tab-pane>
-      <el-tab-pane name="second">
-        <span slot="label"><i class="el-icon-date" /> 生成历史</span>
-        <!-- <generate-history /> -->
-      </el-tab-pane>
-    </el-tabs>
+      </el-form></div>
+    <!-- </el-tab-pane> -->
+    <!-- <el-tab-pane name="second">
+        <span slot="label"><i class="el-icon-date" /> 生成历史</span> -->
+    <!-- <generate-history /> -->
+    <!-- </el-tab-pane> -->
+    <!-- </el-tabs> -->
   </div>
 </template>
 <script>
@@ -193,6 +193,9 @@ export default {
       saveOrUpdateForm: {},
       saveOrUpdateFormRef: 'saveOrUpdateFormRef',
       saveOrUpdateFormRules: {
+        dbType: [
+          { required: true, message: '不能为空', trigger: 'blur' }
+        ],
         host: [
           { required: true, message: '不能为空', trigger: 'blur' }
         ],
@@ -253,7 +256,9 @@ export default {
       list().then(resp => {
         this.datasourceConfigList = resp.data
         this.generateForm.datasourceId = this.updateId != null ? this.updateId : this.datasourceConfigList.length > 0 ? this.datasourceConfigList[0].id : null
-        this.showTables()
+        if (this.generateForm.datasourceId) {
+          this.showTables()
+        }
       })
     },
     getDatasourceLabel(item) {
@@ -326,13 +331,14 @@ export default {
     },
     // 新增、更新、复制、测试连接
     testConnect() {
-      this.testConnectLoading = true
       this.$refs.saveOrUpdateFormRef.validate((valid) => {
         if (valid) {
+          this.testConnectLoading = true
           test(this.saveOrUpdateForm).then(() => {
             showSuccessDialog(this, '连接数据库成功')
             this.testConnectLoading = false
           }).catch(() => {
+            console.log(123)
             this.testConnectLoading = false
           })
         }
