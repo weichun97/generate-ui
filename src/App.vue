@@ -1,46 +1,11 @@
 <template>
   <div id="app">
-    <el-container>
-      <el-header>
-        <!--<el-page-header @back="goBack" content="详情页面">-->
-        <!--</el-page-header>-->
-      </el-header>
-      <el-main>
-        <router-view />
-      </el-main>
-      <el-footer>Footer</el-footer>
-    </el-container>
+    <router-view />
   </div>
 </template>
 
 <script>
-  export default {
-    methods: {
-      // goBack() {
-      //   console.log('go back');
-      // }
-    }
-  };
+export default {
+  name: 'App'
+}
 </script>
-
-<style>
-#app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
