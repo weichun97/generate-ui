@@ -146,9 +146,10 @@ export default {
       })
     },
     handleEdit(row) {
+      localStorage.setItem('templateDetailEditForm', JSON.stringify(row))
       this.$router.push({
         name: 'EditTemplate',
-        params: row
+        query: { id: row.id }
       })
     },
     handleCreate() {

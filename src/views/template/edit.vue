@@ -133,13 +133,19 @@ export default {
     }
   },
   created() {
-    this.saveOrUpdateForm = this.$route.params
-    this.updateId = this.saveOrUpdateForm.id
+    this.initData()
     this.templateSelect()
     this.load(this.activeName)
     this.loadCustomFields()
   },
   methods: {
+    initData() {
+      this.updateId = this.$route.query.id
+      if (this.updateId) {
+        this.saveOrUpdateForm = JSON.parse(localStorage.getItem('templateDetailEditForm'))
+      }
+    },
+    // 右侧变量
     onTabClick(tab) {
       this.load(tab.name)
     },
@@ -148,11 +154,9 @@ export default {
         showSuccessDialog(this, '复制成功')
       })
     },
-    // 加载变量
     load(type) {
       this.treeData = varJson[type]
     },
-    // 加载自定义变量
     loadCustomFields() {
       if (this.saveOrUpdateForm.templateId == null) {
         this.treeData[0].children = []
